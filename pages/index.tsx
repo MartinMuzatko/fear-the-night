@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic'
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 
-const App = dynamic(() => import('../components/app'), { ssr: false })
+const App = dynamic(() => import('../components/App'), { ssr: false })
 
 const Home: NextPage = () => {
 	return (

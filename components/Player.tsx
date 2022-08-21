@@ -8,6 +8,9 @@ interface PlayerProps {
 	setPlayer: Dispatch<SetStateAction<PlayerState>>
 }
 
+const cw = window.innerWidth / 2
+const ch = window.innerHeight / 2
+
 const Player = ({ player, setPlayer }: PlayerProps) => {
 	const height = 40
 	const width = 20
@@ -48,8 +51,8 @@ const Player = ({ player, setPlayer }: PlayerProps) => {
 		if (y != 0) y = y / len
 		setPlayer(player => ({
 			...player,
-			x: player.x + x * delta * player.speed,
-			y: player.y + y * delta * player.speed,
+			x: player.x - x * delta * player.speed,
+			y: player.y - y * delta * player.speed,
 		}))
 	})
 
@@ -63,7 +66,7 @@ const Player = ({ player, setPlayer }: PlayerProps) => {
 	}, [])
 
 	return <>
-		<Rect x={(window.innerWidth / 2) - width} y={(window.innerHeight / 2) - height} width={width} height={height} fill="red" />
+		<Rect x={cw - player.x - width / 2} y={ch - player.y - height / 2} width={width} height={height} fill="red" />
 	</>
 }
 export default Player
