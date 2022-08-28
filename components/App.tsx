@@ -39,6 +39,12 @@ interface ParticleProps {
 	player: PlayerState
 }
 
+const angleCoords = (p1: Point, p2: Point) => Math.atan2(p1.y - p2.y, p1.x - p2.x) * (180 / Math.PI)
+const vectorFromAngle = (angle: number): Point => ({
+	x: Math.cos(angle),
+	y: Math.sin(angle),
+})
+
 const Particle = ({player}: ParticleProps) => {
 	const [particle, setParticle] = useState({
 		originX: player.x,
@@ -60,7 +66,7 @@ const Particle = ({player}: ParticleProps) => {
 				...particle,
 				x: particle.x + -1 * delta * particle.speed,
 			}
-			// y: (particle.y + 1 * delta * particle.speed) % 200,
+			// y: (particle.y + 1 * delta * particle.speed) % normalDistance,
 		})
 	})
 	return <Rect x={cw - particle.originX - particle.x - (player.width / 2)} y={ch - particle.originY - particle.y - (player.height / 2)} width={10} height={10} fill="green" />
@@ -71,34 +77,35 @@ interface Point {
 	y: number
 }
 
-const angleCoords = (p1: Point, p2: Point) => Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI)
-const vectorFromAngle = (angle: number): Point => ({
-	x: Math.cos(angle),
-	y: Math.sin(angle),
-})
+interface Entity extends Point {
+	speed: number
+}
+
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
 interface EnemyProps {
 	player: PlayerState
+	enemy: Entity
 }
 
-const Enemy = ({ player }: EnemyProps) => {
-	const [enemy, setEnemy] = useState({
-		x: 0,
-		y: 0,
-		speed: .25
-	})
+const Enemy = (props: EnemyProps) => {
+	const [enemy, setEnemy] = useState(props.enemy)
 	useAnimationFrame(delta => {
 		setEnemy(enemy => {
-			const angle = angleCoords(enemy, player)
-			const newVector = vectorFromAngle(angle)
+			// const angle = angleCoords(enemy, props.player)
+			// const newVector = vectorFromAngle(angle)
+			const distance = Math.hypot(enemy.x - props.player.x, enemy.y - props.player.y)
+			// console.log(distance)
 			return {
 				...enemy,
-				x: enemy.x + newVector.x * delta * enemy.speed,
-				y: enemy.y + newVector.y * delta * enemy.speed,
+				// x: enemy.x + newVector.x * delta * enemy.speed,
+				// y: enemy.y + newVector.y * delta * enemy.speed,
+				x: lerp(enemy.x, props.player.x, 1 / ((distance / enemy.speed))) || props.player.x,
+				y: lerp(enemy.y, props.player.y, 1 / ((distance / enemy.speed))) || props.player.y,
 			}
 		})
 	})
-	return <Rect x={cw - enemy.x - (player.width / 2)} y={ch - enemy.y - (player.height / 2)} width={30} height={30} fill="pink" />
+	return <Rect x={cw - enemy.x - 15 - (props.player.width / 2)} y={ch - 15 - enemy.y - (props.player.height / 2)} width={30} height={30} fill="pink" />
 }
 
 const App = () => {	
@@ -117,10 +124,13 @@ const App = () => {
 		{ x: 0, y: 0, width: 20, height: 20 },
 	]
 
+
+	const normalDistance = 500
+
 	return <Stage x={player.x} y={player.y} width={window.innerWidth} height={window.innerHeight} >
 		<Layer>
 			{/* Background */}
-			<Rect x={0} y={0} width={window.innerWidth} height={window.innerHeight} fill="black" />
+			<Rect x={-player.x} y={-player.y} width={window.innerWidth} height={window.innerHeight} fill="black" />
 			{gameObjects.map((gameObject, i) => (
 				<Rect key={i} x={cw - gameObject.x} y={ch - gameObject.y} width={gameObject.width} height={gameObject.height} fill="blue" />
 			))}
@@ -128,7 +138,14 @@ const App = () => {
 
 			<Player {...{player, setPlayer}} />
 			<Particle {...{player}} />
-			<Enemy {...{ player }} />
+			<Enemy {...{ player, enemy: { x: normalDistance, y: normalDistance, speed: 2 } }} />
+			<Enemy {...{ player, enemy: { x: -normalDistance, y: normalDistance, speed: 2 } }} />
+			<Enemy {...{ player, enemy: { x: normalDistance, y: -normalDistance, speed: 2 } }} />
+			<Enemy {...{ player, enemy: { x: -normalDistance, y: -normalDistance, speed: 2 } }} />
+			<Enemy {...{ player, enemy: { x: 0, y: -normalDistance, speed: 2 } }} />
+			<Enemy {...{ player, enemy: { x: 0, y: normalDistance, speed: 2 } }} />
+			<Enemy {...{ player, enemy: { x: -normalDistance, y: 0, speed: 2 } }} />
+			<Enemy {...{ player, enemy: { x: normalDistance, y: 0, speed: 2 } }} />
 			{/* <Rect x={(window.innerWidth / 2) - 50} y={(window.innerHeight / 2) - 50} width={100} height={100} fill={color} onClick={() => setColor('green')} /> */}
 		</Layer>
 	</Stage>
